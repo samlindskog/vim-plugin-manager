@@ -36,7 +36,6 @@ function install () {
 			match($0, /^git@github.com:.+\/(.+).git$/, arr);\
 		  	print arr[1]}' <<< $1)"
 		[[ -z $plugin ]] && usage 1
-		mkdir -p "$plugindir"
 		rm -rf "$plugindir/$plugin"
 		cd "$plugindir"
 		[[ $? != 0 ]] && exit

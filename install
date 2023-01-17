@@ -1,5 +1,10 @@
 #!/bin/bash
 
 scriptdir=$(dirname $(readlink -f $0))
+vimplgs="$HOME/.vim"
 
 cp $scriptdir/vimplugin ~/bin 
+rm -rf $vimplgs
+mkdir -p $vimplgs/autoload
+mkdir -p $vimplgs/bundle
+curl -LSo $vimplgs/autoload/pathogen.vim https://tpo.pe/pathogen.vim
