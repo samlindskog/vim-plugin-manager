@@ -1,10 +1,63 @@
 #!/bin/bash
 
-scriptdir=$(dirname $(readlink -f $0))
-vimplgs="$HOME/.vim"
+script=$(readlink -f $0)
+scriptdir=$(dirname $script)
+vimplgs=$HOME/.vim
+cache=$HOME/.cache
 
-cp $scriptdir/vimplugin ~/bin 
-rm -rf $vimplgs
-mkdir -p $vimplgs/autoload
-mkdir -p $vimplgs/bundle
-curl -LSo $vimplgs/autoload/pathogen.vim https://tpo.pe/pathogen.vim
+function usage () {
+	echo "Usage:"
+	echo "install -i (install)"
+	echo "install -c (clean install)"
+	echo "install -u (update vimplugin)"
+	echo "install -r (uninstall)"
+	echo "install -h (help)"
+	[[ -n $1 ]] && exit $1
+	exit
+}
+
+function install () {
+	cp $scriptdir/vimplugin ~/bin 
+	mkdir -p $cache
+	mkdir -p $vimplgs/autoload
+	mkdir -p $vimplgs/bundle
+	curl -LSo $vimplgs/autoload/pathogen.vim https://tpo.pe/pathogen.vim
+	exit
+}
+
+function uninstall () {
+	rm -rf $vimplgs
+	exit
+}
+
+function update() {
+	cp $scriptdir/vimplugin ~/bin 
+	exit
+}
+
+while getopts ":icruh" flag; do
+	case $flag in
+		i)
+			install
+			;;
+		c)
+			rm -rf $vimplgs
+			install
+			;;
+		r)
+			uninstall
+			;;
+		u)
+			update
+			;;
+		h)
+			usage
+			;;
+		*)
+			usage 1
+			;;
+	esac
+done
+
+eval "$script -h"
+exit 0

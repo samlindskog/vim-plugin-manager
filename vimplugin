@@ -2,17 +2,21 @@
 
 script=$(readlink -f $0)
 plugindir="$HOME/.vim/bundle"
+cache="$HOME/.cache/vimplugin"
 
+touch -a $cache
 ifs="$IFS"
 IFS=$'\n'
-read -d '' -r -a plugindirs <<< "$(ls)"
+read -d '' -r -a plugindirs <<< "$(cd $plugindir; ls)"
+read -d '' -r -a pluginsrc < $cache
 IFS="$ifs"
 
 function usage () {
 	echo "Usage:"
-	echo "vimplugin (default -l)"
+	echo "vimplugin (default -h)"
 	echo "vimplugin -l (list plugins)"
 	echo "vimplugin -i GIT-REPOSITORY (install plugin)"
+	echo "vimplugin -s (sync plugins from cache)"
 	echo "vimplugin -r [PLUGIN-NAME] (remove plugin, or all plugins)"
 	echo "vimplugin -u [PLUGIN-NAME] (update plugin, or all plugins)"
 	echo "vimplugin -h (help)"
@@ -30,16 +34,31 @@ function confirm () {
 	done
 }
 
-function install () {
+function install () {	
+	plugin="$(gawk 'NR==1 {\
+		match($0, /^git@github.com:.+\/(.+).git$/, arr);\
+	  	print arr[1]}' <<< $1)"
+	[[ -z $plugin ]] && usage 1
+	for i in "${plugindirs[@]}"; do
+		[[ $i = $plugin ]] && echo "plugin already installed"\
+			&& exit 1
+	done
 	(
-		plugin="$(gawk 'NR==1 {\
-			match($0, /^git@github.com:.+\/(.+).git$/, arr);\
-		  	print arr[1]}' <<< $1)"
-		[[ -z $plugin ]] && usage 1
-		rm -rf "$plugindir/$plugin"
 		cd "$plugindir"
 		[[ $? != 0 ]] && exit
 		git clone "$1"
+		[[ $? = 0 ]] && echo $1 >> $cache
+	)
+	exit
+}
+
+function sync () {
+	(
+		cd "$plugindir"
+		[[ $? != 0 ]] && exit
+		for src in ${pluginsrc[@]}; do
+			git clone "$src"
+		done
 	)
 	exit
 }
@@ -57,8 +76,7 @@ function update () {
 		gitpull "$1"
 		exit
 	}
-	for i in "${plugindirs[@]}"
-	do
+	for i in "${plugindirs[@]}"; do
 		gitpull "$i"
 	done
 	exit
@@ -81,10 +99,13 @@ function remove () {
 	exit
 }
 
-while getopts ":i:u:r:lh" flag; do
+while getopts ":i:u:r:lsh" flag; do
 	case $flag in
 		i)
 			install "$OPTARG"
+			;;
+		s)
+			sync
 			;;
 		u)
 			update "$OPTARG"
@@ -117,5 +138,5 @@ while getopts ":i:u:r:lh" flag; do
 	esac
 done
 
-eval "$script -l"
-exit
+eval "$script -h"
+exit 0
