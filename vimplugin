@@ -1,0 +1,122 @@
+#!/bin/bash
+
+script=$(readlink -f $0)
+plugindir="$HOME/.vim/bundle"
+
+ifs="$IFS"
+IFS=$'\n'
+read -d '' -r -a plugindirs <<< "$(ls)"
+IFS="$ifs"
+
+function usage () {
+	echo "Usage:"
+	echo "vimplugin (default -l)"
+	echo "vimplugin -l (list plugins)"
+	echo "vimplugin -i GIT-REPOSITORY (install plugin)"
+	echo "vimplugin -r [PLUGIN-NAME] (remove plugin, or all plugins)"
+	echo "vimplugin -u [PLUGIN-NAME] (update plugin, or all plugins)"
+	echo "vimplugin -h (help)"
+	[[ -n $1 ]] && exit $1
+	exit 0
+}
+
+function confirm () {
+	while :
+	do
+		echo "confirm $1 (y/n)? : "
+		read yn
+		[[ $yn = y ]] && return 1
+		[[ $yn = n ]] && return 0
+	done
+}
+
+function install () {
+	(
+		plugin="$(gawk 'NR==1 {\
+			match($0, /^git@github.com:.+\/(.+).git$/, arr);\
+		  	print arr[1]}' <<< $1)"
+		[[ -z $plugin ]] && usage 1
+		mkdir -p "$plugindir"
+		rm -rf "$plugindir/$plugin"
+		cd "$plugindir"
+		[[ $? != 0 ]] && exit
+		git clone "$1"
+	)
+	exit
+}
+
+function gitpull () {
+	(
+		cd "$HOME/.vim/bundle/$1"
+		[[ $? != 0 ]] && return
+		git pull --ff-only
+	)
+}
+
+function update () {
+	[[ -n $1 ]] && {
+		gitpull "$1"
+		exit
+	}
+	for i in "${plugindirs[@]}"
+	do
+		gitpull "$i"
+	done
+	exit
+}
+
+function list () {
+	ls "$HOME/.vim/bundle"
+	exit
+}
+
+function remove () {
+	[[ -z $1 ]] && {
+		confirm "remove: ${plugindirs[*]} (prob dont do this)" && exit
+	}
+	[[ -n $1 ]] && {
+		confirm "remove: $1" && exit
+	}
+	rm -rf "$plugindir/$1"
+	mkdir -p "$plugindir"
+	exit
+}
+
+while getopts ":i:u:r:lh" flag; do
+	case $flag in
+		i)
+			install "$OPTARG"
+			;;
+		u)
+			update "$OPTARG"
+			;;
+		l)
+			list
+			;;
+		r)
+			remove "$OPTARG"
+			;;
+		h)
+			usage
+			;;
+		:)
+			case "$OPTARG" in
+				i)
+					usage 1
+					;;
+				u)
+					update
+					;;
+				r)
+					remove
+					;;
+			esac
+			;;
+		*)
+			usage 1
+			;;
+	esac
+done
+
+eval "$script -l"
+exit
