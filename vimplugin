@@ -36,13 +36,17 @@ function confirm () {
 
 function install () {	
 	plugin="$(gawk 'NR==1 {\
-		match($0, /^git@github.com:.+\/(.+).git$/, arr);\
+		match($0, /^git@github\.com:.+\/(.+)\.git$/, arr);\
 	  	print arr[1]}' <<< $1)"
-	[[ -z $plugin ]] && usage 1
+
+	[[ -z $plugin ]] &&\
+		echo "invalid argument. exiting." && exit 1
+
 	for i in "${plugindirs[@]}"; do
-		[[ $i = $plugin ]] && echo "plugin already installed"\
+		[[ $i = $plugin ]] && echo "plugin already installed. exiting."\
 			&& exit 1
 	done
+
 	(
 		cd "$plugindir"
 		[[ $? != 0 ]] && exit
@@ -89,7 +93,7 @@ function list () {
 
 function remove () {
 	[[ -z $1 ]] && {
-		confirm "remove: ${plugindirs[*]} (prob dont do this)" && exit
+		confirm "remove: ${plugindirs[*]}" && exit
 	}
 	[[ -n $1 ]] && {
 		confirm "remove: $1" && exit
