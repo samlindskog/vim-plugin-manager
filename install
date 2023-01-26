@@ -4,7 +4,7 @@ script=$(readlink -f $0)
 scriptdir=$(dirname $script)
 vimplgs=$HOME/.vim
 cache=$HOME/.cache
-installd=$HOME/bin
+installd=$HOME/.local/bin
 
 function usage () {
 	echo "Usage:"
@@ -22,8 +22,8 @@ function install () {
 	mkdir -p $cache
 	mkdir -p $vimplgs/autoload
 	mkdir -p $vimplgs/bundle
-	cp $scriptdir/vimplugin $installd
-	curl -LSo $vimplgs/autoload/pathogen.vim https://tpo.pe/pathogen.vim
+	cp -t $scriptdir/vimplugin $installd
+	curl -LsSo $vimplgs/autoload/pathogen.vim https://tpo.pe/pathogen.vim
 	exit
 }
 
@@ -33,7 +33,7 @@ rm -rf $vimplgs
 }
 
 function update() {
-	cp $scriptdir/vimplugin ~/bin 
+	cp -t $scriptdir/vimplugin ~/bin 
 	exit
 }
 
