@@ -14,7 +14,7 @@ IFS="$ifs"
 function usage () {
 	echo "Usage:"
 	echo "vimplugin (default -h)"
-	echo "vimplugin -l (list plugins)"
+	echo "vimplugin -l (list plugin remote links)"
 	echo "vimplugin -i GIT-REPOSITORY (install plugin)"
 	echo "vimplugin -s (sync plugins from cache)"
 	echo "vimplugin -r [PLUGIN-NAME] (remove plugin, or all plugins)"
@@ -25,8 +25,7 @@ function usage () {
 }
 
 function confirm () {
-	while :
-	do
+	while :; do
 		echo "confirm $1 (y/n)? : "
 		read yn
 		[[ $yn = y ]] && return 1
@@ -87,7 +86,14 @@ function update () {
 }
 
 function list () {
-	ls "$HOME/.vim/bundle"
+	for i in ${plugindirs[@]}; do
+		(
+		cd $plugindir/$i
+		gremote=$(git remote -v)
+		upstreamurl=$(gawk 'NR==1 {print $2; exit}' <<< $gremote)
+		echo $upstreamurl
+		)
+	done
 	exit
 }
 

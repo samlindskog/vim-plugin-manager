@@ -22,7 +22,8 @@ function install () {
 	mkdir -p $cache
 	mkdir -p $vimplgs/autoload
 	mkdir -p $vimplgs/bundle
-	cp -t $scriptdir/vimplugin $installd
+	mkdir -p $installd
+	cp -T $scriptdir/vimplugin $installd/vimplugin
 	curl -LsSo $vimplgs/autoload/pathogen.vim https://tpo.pe/pathogen.vim
 	exit
 }
@@ -33,7 +34,8 @@ rm -rf $vimplgs
 }
 
 function update() {
-	cp -t $scriptdir/vimplugin ~/bin 
+	mkdir -p $installd
+	cp -T $scriptdir/vimplugin $installd/vimplugin 
 	exit
 }
 
